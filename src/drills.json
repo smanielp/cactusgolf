@@ -1,0 +1,247 @@
+{
+  "driving": [
+    {
+      "id": "driving-alignment-gates",
+      "name": "Alignment Gates",
+      "description": "Set up alignment sticks to create a 'gate' that your ball must travel through. Focus on starting the ball on your intended line.",
+      "duration": 15,
+      "achievements": {
+        "beginner": "Hit 5 drives through the gate",
+        "intermediate": "Hit 8 drives through the gate",
+        "advanced": "Hit 10 drives through the gate"
+      }
+    },
+    {
+      "id": "driving-fairway-focus",
+      "name": "Fairway Focus",
+      "description": "Pick targets on the range that represent fairways of varying widths. Try to land your drives within these target areas.",
+      "duration": 20,
+      "achievements": {
+        "beginner": "Land 4 out of 10 drives in the wide fairway",
+        "intermediate": "Land 4 out of 10 drives in the medium fairway",
+        "advanced": "Land 4 out of 10 drives in the narrow fairway"
+      }
+    },
+    {
+      "id": "driving-tempo-trainer",
+      "name": "Tempo Trainer",
+      "description": "Count '1-2-3' for your backswing and '1' for your downswing to develop consistent tempo. Focus on rhythm, not power.",
+      "duration": 15,
+      "achievements": {
+        "beginner": "Hit 10 drives with consistent tempo",
+        "intermediate": "Hit 15 drives with consistent tempo",
+        "advanced": "Hit 20 drives with consistent tempo"
+      }
+    }
+  ],
+  "irons": [
+    {
+      "id": "irons-distance-control",
+      "name": "Distance Control",
+      "description": "Pick three targets at different distances. Hit 5 shots to each target, trying to land within 10 yards of each one.",
+      "duration": 25,
+      "achievements": {
+        "beginner": "Land 3 shots within range of each target",
+        "intermediate": "Land 4 shots within range of each target",
+        "advanced": "Land all 5 shots within range of each target"
+      }
+    },
+    {
+      "id": "irons-trajectory-control",
+      "name": "Trajectory Control",
+      "description": "Practice hitting low, medium, and high shots with the same iron by adjusting ball position and weight distribution.",
+      "duration": 20,
+      "achievements": {
+        "beginner": "Successfully hit 2 of each trajectory type",
+        "intermediate": "Successfully hit 4 of each trajectory type",
+        "advanced": "Successfully hit 6 of each trajectory type"
+      }
+    },
+    {
+      "id": "irons-one-club-challenge",
+      "name": "One Club Challenge",
+      "description": "Using only a 7-iron, try to hit shots that would normally require different clubs by varying your swing and setup.",
+      "duration": 15,
+      "achievements": {
+        "beginner": "Hit 3 different distances accurately",
+        "intermediate": "Hit 5 different distances accurately",
+        "advanced": "Hit 7 different distances accurately"
+      }
+    }
+  ],
+  "wedges": [
+    {
+      "id": "wedges-clock-drill",
+      "name": "Clock Drill",
+      "description": "Imagine a clock face with your normal shot at 6 o'clock. Practice hitting to 4, 6, and 8 o'clock positions by varying your swing length.",
+      "duration": 20,
+      "achievements": {
+        "beginner": "Hit 2 shots to each position with proper distance control",
+        "intermediate": "Hit 4 shots to each position with proper distance control",
+        "advanced": "Hit 6 shots to each position with proper distance control"
+      }
+    },
+    {
+      "id": "wedges-landing-zone",
+      "name": "Landing Zone",
+      "description": "Place an alignment stick or towel at your intended landing spot. Practice landing the ball in that specific area to roll close to the hole.",
+      "duration": 15,
+      "achievements": {
+        "beginner": "Land 3 shots in the zone",
+        "intermediate": "Land 6 shots in the zone",
+        "advanced": "Land 9 shots in the zone"
+      }
+    },
+    {
+      "id": "wedges-varied-lies",
+      "name": "Varied Lies Challenge",
+      "description": "Practice wedge shots from different lies: uphill, downhill, sidehill, rough, and bare lies to develop versatility.",
+      "duration": 25,
+      "achievements": {
+        "beginner": "Successfully execute 1 shot from each lie type",
+        "intermediate": "Successfully execute 2 shots from each lie type",
+        "advanced": "Successfully execute 3 shots from each lie type"
+      }
+    }
+  ],
+  "chipping": [
+    {
+      "id": "chipping-around-the-world",
+      "name": "Around the World",
+      "description": "Place 6 balls in a circle around a practice green hole. Chip each ball, working your way around the 'world'.",
+      "duration": 15,
+      "achievements": {
+        "beginner": "Get 2 balls within 3 feet of the hole",
+        "intermediate": "Get 4 balls within 3 feet of the hole",
+        "advanced": "Get all 6 balls within 3 feet of the hole"
+      }
+    },
+    {
+      "id": "chipping-up-down-challenge",
+      "name": "Up and Down Challenge",
+      "description": "From 10 yards off the green, try to get up and down (chip and one putt) as many times as possible out of 10 attempts.",
+      "duration": 20,
+      "achievements": {
+        "beginner": "Complete 3 up and downs",
+        "intermediate": "Complete 5 up and downs",
+        "advanced": "Complete 7 up and downs"
+      }
+    },
+    {
+      "id": "chipping-leapfrog",
+      "name": "Leapfrog",
+      "description": "Chip your first ball, then try to land each subsequent ball beyond the previous one but closer to the hole.",
+      "duration": 15,
+      "achievements": {
+        "beginner": "Successfully leapfrog 3 balls in a row",
+        "intermediate": "Successfully leapfrog 5 balls in a row",
+        "advanced": "Successfully leapfrog 7 balls in a row"
+      }
+    }
+  ],
+  "putting": [
+    {
+      "id": "putting-ladder",
+      "name": "Ladder Putting Game",
+      "description": "Start with 3 balls at 3 feet. Progress to 6 feet, then 9 feet after completing each level.",
+      "duration": 15,
+      "achievements": {
+        "beginner": "Make 1 putt at each distance",
+        "intermediate": "Make 2 putts at each distance",
+        "advanced": "Make 3 putts at each distance"
+      }
+    },
+    {
+      "id": "putting-clock-drill",
+      "name": "Clock Drill",
+      "description": "Place 12 balls in a circle around the hole, like numbers on a clock face, 3-5 feet away. Putt from each position.",
+      "duration": 20,
+      "achievements": {
+        "beginner": "Make 4 putts",
+        "intermediate": "Make 7 putts",
+        "advanced": "Make 10 putts"
+      }
+    },
+    {
+      "id": "putting-gate-drill",
+      "name": "Gate Drill",
+      "description": "Create a 'gate' using tees just wider than your putter head, 6 inches in front of the ball. Putt through the gate without hitting the tees.",
+      "duration": 10,
+      "achievements": {
+        "beginner": "Successfully putt through the gate 5 times",
+        "intermediate": "Successfully putt through the gate 8 times",
+        "advanced": "Successfully putt through the gate 10 times"
+      }
+    }
+  ],
+  "bunker": [
+    {
+      "id": "bunker-dollar-drill",
+      "name": "Dollar Bill Drill",
+      "description": "Place a dollar bill (or paper) in the sand. Try to slide the clubhead under it, splashing the bill out with the sand.",
+      "duration": 15,
+      "achievements": {
+        "beginner": "Successfully splash out the bill 3 times",
+        "intermediate": "Successfully splash out the bill 5 times",
+        "advanced": "Successfully splash out the bill 7 times"
+      }
+    },
+    {
+      "id": "bunker-line-in-sand",
+      "name": "Line in the Sand",
+      "description": "Draw a line in the sand. Practice entering the sand at the line, not before or after it.",
+      "duration": 15,
+      "achievements": {
+        "beginner": "Hit the line correctly 4 times",
+        "intermediate": "Hit the line correctly 6 times",
+        "advanced": "Hit the line correctly 8 times"
+      }
+    },
+    {
+      "id": "bunker-high-low",
+      "name": "High-Low Challenge",
+      "description": "Practice hitting both high, soft bunker shots and low, running bunker shots with the same club by changing your setup and swing.",
+      "duration": 20,
+      "achievements": {
+        "beginner": "Successfully execute 2 of each shot type",
+        "intermediate": "Successfully execute 4 of each shot type",
+        "advanced": "Successfully execute 6 of each shot type"
+      }
+    }
+  ],
+  "full-round": [
+    {
+      "id": "full-round-par-18",
+      "name": "Par 18 Challenge",
+      "description": "Play 9 holes treating each as a par 2. Your goal is to get up and down from various locations around each green.",
+      "duration": 90,
+      "achievements": {
+        "beginner": "Score 24 or better",
+        "intermediate": "Score 21 or better",
+        "advanced": "Score 18 or better"
+      }
+    },
+    {
+      "id": "full-round-3-club",
+      "name": "3 Club Challenge",
+      "description": "Play 9 holes using only 3 clubs of your choice. Forces creativity and shot-making.",
+      "duration": 120,
+      "achievements": {
+        "beginner": "Finish within 7 strokes of your normal 9-hole score",
+        "intermediate": "Finish within 5 strokes of your normal 9-hole score",
+        "advanced": "Finish within 3 strokes of your normal 9-hole score"
+      }
+    },
+    {
+      "id": "full-round-worst-ball",
+      "name": "Worst Ball",
+      "description": "Hit two balls from each position and always play the worst one. Great for pressure training.",
+      "duration": 120,
+      "achievements": {
+        "beginner": "Finish 9 holes",
+        "intermediate": "Finish 9 holes within 10 strokes of your normal score",
+        "advanced": "Finish 9 holes within 6 strokes of your normal score"
+      }
+    }
+  ]
+}
