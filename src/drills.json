@@ -32,6 +32,28 @@
         "intermediate": "Hit 15 drives with consistent tempo",
         "advanced": "Hit 20 drives with consistent tempo"
       }
+    },
+    {
+      "id": "driving-stress-challenge",
+      "name": "Driver Stress Challenge",
+      "description": "Set a fairway target on the driving range using bunkers or markers as boundaries. Hit 5 drives into the fairway within a set time limit. If you miss the fairway, perform a physical penalty (e.g., 10 air squats + a sprint). Return and hit your remaining drives within the time frame.",
+      "duration": 10,
+      "achievements": {
+        "beginner": "Complete the drill with 2/5 drives in the fairway",
+        "intermediate": "Complete the drill with 3/5 drives in the fairway",
+        "advanced": "Complete the drill with 4/5 or more drives in the fairway"
+      }
+    },
+    {
+      "id": "driving-start-line-challenge",
+      "name": "Start Line Challenge",
+      "description": "Choose a target on the range and identify a visual start line window (e.g., a spot left or right of the target). Hit 10 shots aiming to start each shot within the window and curve it toward the target. Score each shot: +1 point for solid contact, +1 point for starting the ball within the window, +1 point for keeping the ball on target.",
+      "duration": 10,
+      "achievements": {
+        "beginner": "Score 15 points total across 10 shots",
+        "intermediate": "Score 20 points total across 10 shots",
+        "advanced": "Score 25 or more points total across 10 shots"
+      }
     }
   ],
   "irons": [
@@ -101,6 +123,17 @@
         "beginner": "Successfully execute 1 shot from each lie type",
         "intermediate": "Successfully execute 2 shots from each lie type",
         "advanced": "Successfully execute 3 shots from each lie type"
+      }
+    },
+    {
+      "id": "wedges-distance-challenge",
+      "name": "Wedge Distance Challenge",
+      "description": "Select 3-4 random targets on the range. Guess the distance to each target without using a rangefinder. Hit a shot based on your guess, then check the actual yardage. Adjust and hit to each target using different clubs, experimenting with half, three-quarter, and full swings.",
+      "duration": 10,
+      "achievements": {
+        "beginner": "Land within 15 yards of 2 targets",
+        "intermediate": "Land within 10 yards of 3 targets",
+        "advanced": "Land within 5 yards of all targets"
       }
     }
   ],
