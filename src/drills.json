@@ -89,6 +89,17 @@
         "intermediate": "Hit 5 different distances accurately",
         "advanced": "Hit 7 different distances accurately"
       }
+    },
+    {
+      "id": "irons-one-handed-l-to-l",
+      "name": "One handed L to L",
+      "description": "Do the L to L with your lead hand. Set up to the ball with only your lead hand on the club, swing back until your wrist is set and the club makes an L then swing through and hit the ball. Release the club so you make an L on the follow through. Let your arm swing independent of your shoulder socket. Then repeat with your trail arm.",
+      "duration": 5,
+      "achievements": {
+        "beginner": "Complete 5 swings with each hand",
+        "intermediate": "Complete 5 swings with each hand",
+        "advanced": "Complete 5 swings with each hand"
+      }
     }
   ],
   "wedges": [
