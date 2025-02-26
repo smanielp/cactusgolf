@@ -13,18 +13,45 @@ function App() {
   const [sessions, setSessions] = useState([]);
   const [expandedSession, setExpandedSession] = useState(null);
 
-  // Load sessions from localStorage on initial load
-  useEffect(() => {
+  // Function to load sessions from localStorage
+  const loadSessions = () => {
     const savedSessions = localStorage.getItem('golfSessions');
     if (savedSessions) {
       setSessions(JSON.parse(savedSessions));
     }
-  }, []);
+  };
 
-  // Save sessions to localStorage whenever they change
+  // Load sessions from localStorage on initial load
   useEffect(() => {
-    localStorage.setItem('golfSessions', JSON.stringify(sessions));
-  }, [sessions]);
+    loadSessions();
+    
+    // Add event listener for storage changes
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Custom event listener for our app
+    window.addEventListener('sessionsUpdated', loadSessions);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('sessionsUpdated', loadSessions);
+    };
+  }, []);
+  
+  // Handle storage changes (useful when multiple tabs are open)
+  const handleStorageChange = (e) => {
+    if (e.key === 'golfSessions') {
+      loadSessions();
+    }
+  };
+
+  // Save sessions to localStorage whenever they change within this component
+  const saveSessions = (updatedSessions) => {
+    localStorage.setItem('golfSessions', JSON.stringify(updatedSessions));
+    setSessions(updatedSessions);
+    
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new Event('sessionsUpdated'));
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -42,7 +69,8 @@ function App() {
       date: practiceSession.date || new Date().toISOString().split('T')[0]
     };
     
-    setSessions(prev => [newSession, ...prev]);
+    const updatedSessions = [newSession, ...sessions];
+    saveSessions(updatedSessions);
     
     // Reset form
     setPracticeSession({
@@ -62,6 +90,20 @@ function App() {
     }
   };
 
+  // Function to check if a session has drill results
+  const hasResults = (session) => {
+    return session.drills && session.drills.some(drill => drill.result);
+  };
+
+  // Pass loadSessions function to DrillsPage
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    if (tab === 'journal') {
+      // Reload sessions when switching to journal tab
+      loadSessions();
+    }
+  };
+
   return (
     <div className="max-w-md mx-auto p-4">
       <h1 className="text-2xl font-bold text-center text-green-800 mb-6">Cactus Golf Practice Tracker</h1>
@@ -72,7 +114,7 @@ function App() {
           className={`py-2 px-4 ${activeTab === 'journal' 
             ? 'border-b-2 border-green-600 text-green-800 font-medium' 
             : 'text-gray-500 hover:text-green-800'}`}
-          onClick={() => setActiveTab('journal')}
+          onClick={() => handleTabChange('journal')}
         >
           Practice Journal
         </button>
@@ -80,7 +122,7 @@ function App() {
           className={`py-2 px-4 ${activeTab === 'drills' 
             ? 'border-b-2 border-green-600 text-green-800 font-medium' 
             : 'text-gray-500 hover:text-green-800'}`}
-          onClick={() => setActiveTab('drills')}
+          onClick={() => handleTabChange('drills')}
         >
           Practice Drills
         </button>
@@ -167,7 +209,18 @@ function App() {
                       className="flex justify-between cursor-pointer"
                       onClick={() => toggleSessionDetails(session.id)}
                     >
-                      <span className="font-medium">{new Date(session.date).toLocaleDateString()}</span>
+                      <div className="flex items-center">
+                        <span className="font-medium">{new Date(session.date).toLocaleDateString()}</span>
+                        {session.successRate && (
+                          <span className={`ml-2 text-xs px-2 py-1 rounded ${
+                            session.successRate >= 80 ? 'bg-green-100 text-green-800' :
+                            session.successRate >= 50 ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {session.successRate}% success
+                          </span>
+                        )}
+                      </div>
                       <div className="flex items-center">
                         <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">
                           {session.duration} mins
@@ -196,9 +249,31 @@ function App() {
                         <h4 className="text-sm font-medium mb-1">Drills:</h4>
                         <div className="space-y-2">
                           {session.drills.map(drill => (
-                            <div key={drill.id} className="flex justify-between text-xs bg-gray-50 p-2 rounded">
-                              <span>{drill.name}</span>
-                              <span className="text-gray-500">{drill.duration} mins</span>
+                            <div key={drill.id} className="text-xs bg-gray-50 p-2 rounded">
+                              <div className="flex justify-between items-center">
+                                <span className="font-medium">{drill.name}</span>
+                                <span className="text-gray-500">{drill.duration} mins</span>
+                              </div>
+                              
+                              {/* Show results if available */}
+                              {drill.result && (
+                                <div className="mt-1 flex items-center">
+                                  <div className="mr-2">Results:</div>
+                                  <div 
+                                    className={`px-2 py-1 rounded ${
+                                      drill.result.achieved >= drill.result.requirement.count
+                                        ? 'bg-green-100 text-green-800'
+                                        : 'bg-red-100 text-red-800'
+                                    }`}
+                                  >
+                                    {drill.result.achieved}/{drill.result.requirement.count} {drill.result.requirement.text.split(' ').slice(-1)[0]}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {drill.description && (
+                                <div className="mt-1 text-gray-600">{drill.description}</div>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -213,7 +288,7 @@ function App() {
       )}
 
       {/* Practice Drills Tab */}
-      {activeTab === 'drills' && <DrillsPage />}
+      {activeTab === 'drills' && <DrillsPage onSessionSaved={loadSessions} />}
     </div>
   );
 }

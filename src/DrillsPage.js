@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import drillsData from './drills.json';
+import PracticeSessionExecutor from './components/PracticeSessionExecutor';
 
 function DrillsPage() {
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -7,6 +8,7 @@ function DrillsPage() {
   const [achievements, setAchievements] = useState({});
   const [sessionDrills, setSessionDrills] = useState([]);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [executingSession, setExecutingSession] = useState(false);
   
   // Load achievements from localStorage on initial load
   useEffect(() => {
@@ -57,27 +59,32 @@ function DrillsPage() {
     }, 2000);
   };
 
-  // Create practice session from selected drills
-  const createSession = () => {
+  // Start executing the practice session
+  const startSession = () => {
     if (sessionDrills.length === 0) return;
-    
+    setExecutingSession(true);
+  };
+
+  // Handle session completion
+  const handleSessionComplete = (sessionData) => {
     // Calculate total duration
     const totalDuration = sessionDrills.reduce((total, drill) => total + drill.duration, 0);
     
     // Determine focus areas
     const focusAreas = [...new Set(sessionDrills.map(drill => {
-      // Extract category from drill ID (e.g., "putting-ladder" → "putting")
       return drill.id.split('-')[0];
     }))];
     
-    // Create session object
+    // Create session object with results
     const newSession = {
       id: Date.now(),
       date: new Date().toISOString().split('T')[0],
       duration: totalDuration,
       focus: focusAreas.join(', '),
-      notes: `Drills: ${sessionDrills.map(d => d.name).join(', ')}`,
-      drills: sessionDrills
+      notes: `Completed practice session with ${sessionData.successRate}% success rate`,
+      drills: sessionData.drills,
+      completedAt: sessionData.completedAt,
+      successRate: sessionData.successRate
     };
     
     // Get existing sessions
@@ -89,17 +96,56 @@ function DrillsPage() {
     // Save to localStorage
     localStorage.setItem('golfSessions', JSON.stringify(updatedSessions));
     
-    // Clear session drills
+    // Update achievements based on session results
+    const updatedAchievements = { ...achievements };
+    
+    sessionData.drills.forEach(drill => {
+      const result = drill.result;
+      if (result && result.requirement) {
+        const currentLevel = achievements[drill.id] || 'beginner';
+        const levelIndex = ['beginner', 'intermediate', 'advanced'].indexOf(currentLevel);
+        
+        // If user achieved the goal for their current level, move them up to the next level
+        if (result.achieved >= result.requirement.count && levelIndex < 2) {
+          const nextLevel = ['beginner', 'intermediate', 'advanced'][levelIndex + 1];
+          updatedAchievements[drill.id] = nextLevel;
+        }
+      }
+    });
+    
+    setAchievements(updatedAchievements);
+    
+    // Reset state
+    setExecutingSession(false);
     setSessionDrills([]);
     
     // Show confirmation
-    alert('Practice session created successfully!');
+    alert('Practice session saved to your journal!');
+  };
+
+  // Handle session cancellation
+  const handleSessionCancel = () => {
+    if (window.confirm('Are you sure you want to cancel this practice session?')) {
+      setExecutingSession(false);
+      setSessionDrills([]);
+    }
   };
 
   // Remove drill from session
   const removeFromSession = (drillId) => {
     setSessionDrills(prev => prev.filter(drill => drill.id !== drillId));
   };
+
+  // If we're executing a session, show the session executor component
+  if (executingSession) {
+    return (
+      <PracticeSessionExecutor 
+        sessionDrills={sessionDrills}
+        onComplete={handleSessionComplete}
+        onCancel={handleSessionCancel}
+      />
+    );
+  }
 
   return (
     <div className="max-w-md mx-auto">
@@ -129,10 +175,10 @@ function DrillsPage() {
             </div>
             
             <button
-              onClick={createSession}
+              onClick={startSession}
               className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
             >
-              Create Practice Session
+              Start Practice Session
             </button>
           </div>
         </div>
