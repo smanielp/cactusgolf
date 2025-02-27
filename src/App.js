@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import DrillsPage from './DrillsPage';
+import { useAuth } from './components/auth/AuthProvider';
+import { usePracticeSessions } from './hooks/usePracticeSessions';
+import { auth } from './firebase';
+import DrillManager from './components/admin/DrillManager';
 
 function App() {
-  const [activeTab, setActiveTab] = useState('journal'); // 'journal', 'drills'
+  const [activeTab, setActiveTab] = useState('journal'); // 'journal', 'drills', 'admin'
   const [practiceSession, setPracticeSession] = useState({
     date: '',
     duration: '',
@@ -10,48 +14,38 @@ function App() {
     notes: ''
   });
   
-  const [sessions, setSessions] = useState([]);
   const [expandedSession, setExpandedSession] = useState(null);
+  const { currentUser, isAdmin } = useAuth();
+  const { 
+    sessions, 
+    loading: sessionsLoading, 
+    addSession, 
+    migrateLocalSessionsToFirestore 
+  } = usePracticeSessions();
 
-  // Function to load sessions from localStorage
-  const loadSessions = () => {
-    const savedSessions = localStorage.getItem('golfSessions');
-    if (savedSessions) {
-      setSessions(JSON.parse(savedSessions));
-    }
-  };
-
-  // Load sessions from localStorage on initial load
+  // Try to migrate local storage sessions to Firebase when user logs in
   useEffect(() => {
-    loadSessions();
-    
-    // Add event listener for storage changes
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Custom event listener for our app
-    window.addEventListener('sessionsUpdated', loadSessions);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('sessionsUpdated', loadSessions);
-    };
-  }, []);
-  
-  // Handle storage changes (useful when multiple tabs are open)
-  const handleStorageChange = (e) => {
-    if (e.key === 'golfSessions') {
-      loadSessions();
+    if (currentUser) {
+      const localSessions = localStorage.getItem('golfSessions');
+      if (localSessions) {
+        // Show migration banner/prompt to user
+        const shouldMigrate = window.confirm(
+          'We found local practice sessions. Would you like to migrate them to your account?'
+        );
+        
+        if (shouldMigrate) {
+          migrateLocalSessionsToFirestore()
+            .then(success => {
+              if (success) {
+                alert('Your practice sessions have been successfully migrated!');
+              } else {
+                alert('There was an issue migrating your sessions. Please try again later.');
+              }
+            });
+        }
+      }
     }
-  };
-
-  // Save sessions to localStorage whenever they change within this component
-  const saveSessions = (updatedSessions) => {
-    localStorage.setItem('golfSessions', JSON.stringify(updatedSessions));
-    setSessions(updatedSessions);
-    
-    // Dispatch custom event to notify other components
-    window.dispatchEvent(new Event('sessionsUpdated'));
-  };
+  }, [currentUser, migrateLocalSessionsToFirestore]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -61,24 +55,29 @@ function App() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const newSession = {
-      ...practiceSession,
-      id: Date.now(),
-      date: practiceSession.date || new Date().toISOString().split('T')[0]
-    };
     
-    const updatedSessions = [newSession, ...sessions];
-    saveSessions(updatedSessions);
-    
-    // Reset form
-    setPracticeSession({
-      date: '',
-      duration: '',
-      focus: '',
-      notes: ''
-    });
+    try {
+      const newSession = {
+        ...practiceSession,
+        date: practiceSession.date || new Date().toISOString().split('T')[0]
+      };
+      
+      await addSession(newSession);
+      
+      // Reset form
+      setPracticeSession({
+        date: '',
+        duration: '',
+        focus: '',
+        notes: ''
+      });
+      
+      alert('Practice session logged successfully!');
+    } catch (error) {
+      alert('Failed to log practice session: ' + error.message);
+    }
   };
 
   // Toggle expanded session details
@@ -95,18 +94,30 @@ function App() {
     return session.drills && session.drills.some(drill => drill.result);
   };
 
-  // Pass loadSessions function to DrillsPage
+  // Handle tab change
   const handleTabChange = (tab) => {
     setActiveTab(tab);
-    if (tab === 'journal') {
-      // Reload sessions when switching to journal tab
-      loadSessions();
-    }
   };
 
   return (
     <div className="max-w-md mx-auto p-4">
-      <h1 className="text-2xl font-bold text-center text-green-800 mb-6">Cactus Golf Practice Tracker</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold text-center text-green-800">Cactus Golf Practice Tracker</h1>
+        {currentUser && (
+          <button 
+            onClick={() => auth.signOut()} 
+            className="text-sm bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded">
+            Sign Out
+          </button>
+        )}
+      </div>
+      
+      {currentUser && (
+        <div className="text-sm text-gray-600 mb-4">
+          Signed in as: {currentUser.displayName || currentUser.email}
+          {isAdmin && <span className="ml-2 bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-xs">Admin</span>}
+        </div>
+      )}
       
       {/* Tab Navigation */}
       <div className="flex border-b mb-6">
@@ -126,6 +137,16 @@ function App() {
         >
           Practice Drills
         </button>
+        {isAdmin && (
+          <button
+            className={`py-2 px-4 ${activeTab === 'admin' 
+              ? 'border-b-2 border-green-600 text-green-800 font-medium' 
+              : 'text-gray-500 hover:text-green-800'}`}
+            onClick={() => handleTabChange('admin')}
+          >
+            Admin
+          </button>
+        )}
       </div>
       
       {/* Practice Journal Tab */}
@@ -199,7 +220,9 @@ function App() {
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-semibold mb-4">Recent Practice Sessions</h2>
             
-            {sessions.length === 0 ? (
+            {sessionsLoading ? (
+              <p className="text-gray-500">Loading practice sessions...</p>
+            ) : sessions.length === 0 ? (
               <p className="text-gray-500">No practice sessions logged yet.</p>
             ) : (
               <div className="space-y-4">
@@ -288,7 +311,10 @@ function App() {
       )}
 
       {/* Practice Drills Tab */}
-      {activeTab === 'drills' && <DrillsPage onSessionSaved={loadSessions} />}
+      {activeTab === 'drills' && <DrillsPage />}
+      
+      {/* Admin Tab */}
+      {activeTab === 'admin' && isAdmin && <DrillManager />}
     </div>
   );
 }
