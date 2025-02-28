@@ -1,28 +1,113 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { db } from '../firebase';
-import { collection, getDocs, query, orderBy, addDoc } from 'firebase/firestore';
+import { 
+  collection, 
+  getDocs, 
+  query, 
+  orderBy, 
+  addDoc,
+  writeBatch,
+  doc 
+} from 'firebase/firestore';
 import drillsJSON from '../drills.json'; // Import the original JSON for migration
 
 export function useDrills() {
   const [drills, setDrills] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [lastRefresh, setLastRefresh] = useState(Date.now()); // Track last refresh time
+
+  // Function to fetch drills from Firestore
+  const fetchDrills = useCallback(async () => {
+    setLoading(true);
+    try {
+      const drillsRef = collection(db, 'drills');
+      const q = query(drillsRef, orderBy('category'), orderBy('name'));
+      const querySnapshot = await getDocs(q);
+      
+      // Group by category
+      const drillsByCategory = {};
+      
+      querySnapshot.forEach((doc) => {
+        const drillData = doc.data();
+        const category = drillData.category;
+        
+        if (!drillsByCategory[category]) {
+          drillsByCategory[category] = [];
+        }
+        
+        drillsByCategory[category].push({
+          ...drillData,
+          id: doc.id
+        });
+      });
+      
+      // If no drills in Firestore, use the local JSON
+      if (Object.keys(drillsByCategory).length === 0) {
+        setDrills(drillsJSON);
+      } else {
+        setDrills(drillsByCategory);
+      }
+      
+    } catch (err) {
+      console.error('Error fetching drills:', err);
+      setError(err.message);
+      
+      // Fallback to local JSON if Firestore fails
+      setDrills(drillsJSON);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   // Function to migrate drills from JSON to Firestore (admin only)
   const migrateDrillsToFirestore = async () => {
     try {
+      const batch = writeBatch(db);
+      let batchCount = 0;
+      const MAX_BATCH_SIZE = 500; // Firestore limit is 500 writes per batch
+      
+      // Track batches to commit
+      const batches = [];
+      let currentBatch = batch;
+      
       // For each category in the drills JSON
       for (const [category, drillsList] of Object.entries(drillsJSON)) {
-        // Batch these for better performance in a real implementation
         for (const drill of drillsList) {
-          const drillRef = collection(db, 'drills');
-          await addDoc(drillRef, {
+          // Create a new document reference
+          const drillRef = doc(collection(db, 'drills'));
+          
+          // Add to current batch
+          currentBatch.set(drillRef, {
             ...drill,
             category,
             createdAt: new Date()
           });
+          
+          batchCount++;
+          
+          // If we hit the batch limit, prepare to commit and start a new batch
+          if (batchCount >= MAX_BATCH_SIZE) {
+            batches.push(currentBatch);
+            currentBatch = writeBatch(db);
+            batchCount = 0;
+          }
         }
       }
+      
+      // Add the last batch if it has operations
+      if (batchCount > 0) {
+        batches.push(currentBatch);
+      }
+      
+      // Commit all batches
+      for (const batch of batches) {
+        await batch.commit();
+      }
+      
+      // Refresh the drills list
+      await fetchDrills();
+      
       return true;
     } catch (err) {
       console.error('Error migrating drills:', err);
@@ -30,55 +115,41 @@ export function useDrills() {
     }
   };
 
-  useEffect(() => {
-    // Function to fetch drills from Firestore
-    const fetchDrills = async () => {
-      try {
-        const drillsRef = collection(db, 'drills');
-        const querySnapshot = await getDocs(drillsRef);
-        
-        // Group by category
-        const drillsByCategory = {};
-        
-        querySnapshot.forEach((doc) => {
-          const drillData = doc.data();
-          const category = drillData.category;
-          
-          if (!drillsByCategory[category]) {
-            drillsByCategory[category] = [];
-          }
-          
-          drillsByCategory[category].push({
-            ...drillData,
-            id: doc.id
-          });
-        });
-        
-        // If no drills in Firestore, use the local JSON
-        if (Object.keys(drillsByCategory).length === 0) {
-          setDrills(drillsJSON);
-        } else {
-          setDrills(drillsByCategory);
-        }
-        
-      } catch (err) {
-        console.error('Error fetching drills:', err);
-        setError(err.message);
-        
-        // Fallback to local JSON if Firestore fails
-        setDrills(drillsJSON);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Function to add a single new drill
+  const addDrill = async (drillData) => {
+    try {
+      const drillRef = collection(db, 'drills');
+      const docRef = await addDoc(drillRef, {
+        ...drillData,
+        createdAt: new Date()
+      });
+      
+      // Refresh drills
+      refreshDrills();
+      
+      return docRef.id;
+    } catch (err) {
+      console.error('Error adding drill:', err);
+      throw err;
+    }
+  };
 
+  // Function to refresh drills
+  const refreshDrills = () => {
+    setLastRefresh(Date.now());
+  };
+
+  // Fetch drills initially and when refresh is triggered
+  useEffect(() => {
     fetchDrills();
-  }, []);
+  }, [fetchDrills, lastRefresh]);
 
   return { 
     drills, 
     loading, 
     error, 
-    migrateDrillsToFirestore // Exposed for admin use
+    migrateDrillsToFirestore,
+    addDrill,
+    refreshDrills
   };
 }

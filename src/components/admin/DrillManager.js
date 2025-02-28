@@ -8,14 +8,22 @@ import {
   deleteDoc, 
   updateDoc,
   query,
-  orderBy 
+  orderBy,
+  writeBatch
 } from 'firebase/firestore';
 import { useDrills } from '../../hooks/useDrills';
 import { useAuth } from '../auth/AuthProvider';
+import BulkImportUtility from './BulkImportUtility';
 
 function DrillManager() {
   const { isAdmin } = useAuth();
-  const { drills, migrateDrillsToFirestore } = useDrills();
+  const { 
+    drills: firestoreDrills, 
+    migrateDrillsToFirestore, 
+    loading: drillsLoading,
+    refreshDrills 
+  } = useDrills();
+  
   const [drillsList, setDrillsList] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [categories, setCategories] = useState([]);
@@ -23,6 +31,7 @@ function DrillManager() {
   const [editingDrill, setEditingDrill] = useState(null);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
+  const [showBulkImport, setShowBulkImport] = useState(false);
 
   // Load drills from Firestore
   useEffect(() => {
@@ -55,7 +64,7 @@ function DrillManager() {
     };
     
     fetchDrillsFromFirestore();
-  }, []);
+  }, [drillsLoading]); // Add drillsLoading as a dependency to trigger refreshes
 
   // Filter drills by category
   const filteredDrills = selectedCategory 
@@ -89,6 +98,9 @@ function DrillManager() {
         
         setDrillsList(fetchedDrills);
         setCategories(Array.from(categorySet));
+        
+        // Refresh drills in other components
+        refreshDrills();
       } catch (err) {
         console.error('Error migrating drills:', err);
         setError('Failed to migrate drills');
@@ -108,6 +120,10 @@ function DrillManager() {
         
         // Update state to remove the deleted drill
         setDrillsList(prev => prev.filter(drill => drill.id !== drillId));
+        
+        // Refresh drills in other components
+        refreshDrills();
+        
         setSuccess('Drill deleted successfully');
       } catch (err) {
         console.error('Error deleting drill:', err);
@@ -184,6 +200,9 @@ function DrillManager() {
         setSuccess('New drill created successfully');
       }
       
+      // Refresh drills in other components
+      refreshDrills();
+      
       // Reset editing state
       setEditingDrill(null);
     } catch (err) {
@@ -221,6 +240,70 @@ function DrillManager() {
     }
   }, [success, error]);
 
+  // Handle file upload for bulk import
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        setLoading(true);
+        const content = e.target.result;
+        const drills = JSON.parse(content);
+        
+        // Check if it's a valid drills file
+        if (!drills || typeof drills !== 'object') {
+          setError('Invalid drill data format');
+          return;
+        }
+        
+        // Create a batch
+        const batch = writeBatch(db);
+        let count = 0;
+        
+        // Process drills
+        for (const [category, drillsArray] of Object.entries(drills)) {
+          for (const drill of drillsArray) {
+            if (!drill.name || !drill.description || !drill.duration) {
+              continue; // Skip invalid drills
+            }
+            
+            const drillRef = doc(collection(db, 'drills'));
+            batch.set(drillRef, {
+              ...drill,
+              category,
+              createdAt: new Date()
+            });
+            count++;
+          }
+        }
+        
+        // Commit the batch
+        await batch.commit();
+        
+        // Refresh drills
+        refreshDrills();
+        
+        setSuccess(`Successfully imported ${count} drills`);
+      } catch (err) {
+        console.error('Error importing drills:', err);
+        setError('Failed to import drills: ' + err.message);
+      } finally {
+        setLoading(false);
+        // Reset the file input
+        event.target.value = '';
+      }
+    };
+    
+    reader.readAsText(file);
+  };
+
+  // Toggle bulk import section
+  const toggleBulkImport = () => {
+    setShowBulkImport(!showBulkImport);
+  };
+
   // If not admin, don't show the component
   if (!isAdmin) {
     return <div className="text-center p-4">Admin access required</div>;
@@ -248,7 +331,7 @@ function DrillManager() {
         </div>
       )}
       
-      <div className="flex space-x-4 mb-6">
+      <div className="flex flex-wrap gap-3 mb-6">
         <button 
           onClick={handleMigration}
           disabled={loading}
@@ -264,7 +347,37 @@ function DrillManager() {
         >
           Create New Drill
         </button>
+        
+        <div className="relative">
+          <input
+            type="file"
+            id="drillsFile"
+            accept=".json"
+            className="hidden"
+            onChange={handleFileUpload}
+          />
+          <label 
+            htmlFor="drillsFile"
+            className="cursor-pointer bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700 disabled:bg-gray-400 inline-block"
+          >
+            Import Drills from File
+          </label>
+        </div>
+        
+        <button
+          onClick={toggleBulkImport}
+          className="bg-orange-500 text-white py-2 px-4 rounded hover:bg-orange-600"
+        >
+          {showBulkImport ? 'Hide Bulk Import' : 'Show Bulk Import Tool'}
+        </button>
       </div>
+      
+      {/* Bulk Import Section */}
+      {showBulkImport && (
+        <div className="mb-6">
+          <BulkImportUtility />
+        </div>
+      )}
       
       <div className="mb-6">
         <label className="block text-sm font-medium mb-2">Filter by Category</label>

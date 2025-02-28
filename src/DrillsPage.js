@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import drillsData from './drills.json';
+// Remove the direct import of drills.json
+import { useDrills } from './hooks/useDrills'; // Import the hook instead
 import PracticeSessionExecutor from './components/PracticeSessionExecutor';
 
 function DrillsPage() {
@@ -9,6 +10,9 @@ function DrillsPage() {
   const [sessionDrills, setSessionDrills] = useState([]);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [executingSession, setExecutingSession] = useState(false);
+  
+  // Use the hook to fetch drill data from Firestore
+  const { drills: drillsData, loading: drillsLoading } = useDrills();
   
   // Load achievements from localStorage on initial load
   useEffect(() => {
@@ -23,16 +27,16 @@ function DrillsPage() {
     localStorage.setItem('drillAchievements', JSON.stringify(achievements));
   }, [achievements]);
 
-  // Update drills when category changes
+  // Update drills when category or drillsData changes
   useEffect(() => {
-    if (selectedCategory) {
+    if (selectedCategory && drillsData[selectedCategory]) {
       setDrills(drillsData[selectedCategory] || []);
-    } else {
+    } else if (!selectedCategory) {
       // When no category is selected, show all drills
       const allDrills = Object.values(drillsData).flat();
       setDrills(allDrills);
     }
-  }, [selectedCategory]);
+  }, [selectedCategory, drillsData]); // Added drillsData as a dependency
 
   // Get all available categories from the drill data
   const categories = Object.keys(drillsData).map(key => ({
@@ -220,51 +224,58 @@ function DrillsPage() {
       
       {/* Drills List */}
       <div className="space-y-6 pb-24">
-        {drills.map(drill => (
-          <div key={drill.id} className="bg-white p-4 rounded-lg shadow-md">
-            <div className="flex justify-between items-start mb-2">
-              <h2 className="text-lg font-semibold">{drill.name}</h2>
-              <div className="flex items-center">
-                <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded mr-2">
-                  {drill.duration} mins
-                </span>
-                <button 
-                  onClick={() => addToSession(drill)}
-                  className="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700"
-                >
-                  Add to Session
-                </button>
-              </div>
-            </div>
-            
-            <p className="text-gray-600 mb-3 text-sm">{drill.description}</p>
-            
-            {/* Achievement Levels */}
-            <div className="mt-4">
-              <h3 className="text-sm font-medium mb-2">Achievement Levels</h3>
-              <div className="grid grid-cols-3 gap-2">
-                {['beginner', 'intermediate', 'advanced'].map(level => (
-                  <button
-                    key={level}
-                    onClick={() => updateAchievement(drill.id, level)}
-                    className={`text-xs py-1 px-2 rounded border ${
-                      achievements[drill.id] === level
-                        ? 'bg-green-600 text-white border-green-600'
-                        : 'bg-white text-gray-700 border-gray-300'
-                    }`}
-                  >
-                    {level.charAt(0).toUpperCase() + level.slice(1)}
-                  </button>
-                ))}
-              </div>
-              <div className="mt-2 text-xs text-gray-600">
-                {drill.achievements[achievements[drill.id] || 'beginner']}
-              </div>
-            </div>
+        {drillsLoading ? (
+          <div className="text-center py-6">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
+            <p className="mt-2 text-gray-500">Loading drills...</p>
           </div>
-        ))}
+        ) : (
+          drills.map(drill => (
+            <div key={drill.id} className="bg-white p-4 rounded-lg shadow-md">
+              <div className="flex justify-between items-start mb-2">
+                <h2 className="text-lg font-semibold">{drill.name}</h2>
+                <div className="flex items-center">
+                  <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded mr-2">
+                    {drill.duration} mins
+                  </span>
+                  <button 
+                    onClick={() => addToSession(drill)}
+                    className="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700"
+                  >
+                    Add to Session
+                  </button>
+                </div>
+              </div>
+              
+              <p className="text-gray-600 mb-3 text-sm">{drill.description}</p>
+              
+              {/* Achievement Levels */}
+              <div className="mt-4">
+                <h3 className="text-sm font-medium mb-2">Achievement Levels</h3>
+                <div className="grid grid-cols-3 gap-2">
+                  {['beginner', 'intermediate', 'advanced'].map(level => (
+                    <button
+                      key={level}
+                      onClick={() => updateAchievement(drill.id, level)}
+                      className={`text-xs py-1 px-2 rounded border ${
+                        achievements[drill.id] === level
+                          ? 'bg-green-600 text-white border-green-600'
+                          : 'bg-white text-gray-700 border-gray-300'
+                      }`}
+                    >
+                      {level.charAt(0).toUpperCase() + level.slice(1)}
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-2 text-xs text-gray-600">
+                  {drill.achievements[achievements[drill.id] || 'beginner']}
+                </div>
+              </div>
+            </div>
+          ))
+        )}
         
-        {drills.length === 0 && (
+        {!drillsLoading && drills.length === 0 && (
           <p className="text-gray-500 text-center py-6">No drills found</p>
         )}
       </div>
