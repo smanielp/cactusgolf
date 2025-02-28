@@ -27,7 +27,8 @@ export function AuthProvider({ children }) {
   // Context value
   const value = {
     currentUser,
-    isAdmin: currentUser?.email === 'dan.pedrero@gmail.com' // Simple admin check based on email
+    // Use environment variable for admin check
+    isAdmin: currentUser?.email === process.env.REACT_APP_ADMIN_EMAIL
   };
 
   // Show loading indicator
