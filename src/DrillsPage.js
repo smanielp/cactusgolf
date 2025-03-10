@@ -106,12 +106,12 @@ function DrillsPage() {
     sessionData.drills.forEach(drill => {
       const result = drill.result;
       if (result && result.requirement) {
-        const currentLevel = achievements[drill.id] || 'beginner';
-        const levelIndex = ['beginner', 'intermediate', 'advanced'].indexOf(currentLevel);
+        const currentLevel = achievements[drill.id] || 'level1';
+        const levelIndex = ['level1', 'level2', 'level3'].indexOf(currentLevel);
         
         // If user achieved the goal for their current level, move them up to the next level
         if (result.achieved >= result.requirement.count && levelIndex < 2) {
-          const nextLevel = ['beginner', 'intermediate', 'advanced'][levelIndex + 1];
+          const nextLevel = ['level1', 'level2', 'level3'][levelIndex + 1];
           updatedAchievements[drill.id] = nextLevel;
         }
       }
@@ -253,7 +253,7 @@ function DrillsPage() {
               <div className="mt-4">
                 <h3 className="text-sm font-medium mb-2">Achievement Levels</h3>
                 <div className="grid grid-cols-3 gap-2">
-                  {['beginner', 'intermediate', 'advanced'].map(level => (
+                  {['level1', 'level2', 'level3'].map(level => (
                     <button
                       key={level}
                       onClick={() => updateAchievement(drill.id, level)}
@@ -263,12 +263,12 @@ function DrillsPage() {
                           : 'bg-white text-gray-700 border-gray-300'
                       }`}
                     >
-                      {level.charAt(0).toUpperCase() + level.slice(1)}
+                      {level === 'level1' ? 'Level 1' : level === 'level2' ? 'Level 2' : 'Level 3'}
                     </button>
                   ))}
                 </div>
                 <div className="mt-2 text-xs text-gray-600">
-                  {drill.achievements[achievements[drill.id] || 'beginner']}
+                  {drill.achievements[achievements[drill.id] || 'level1']}
                 </div>
               </div>
             </div>

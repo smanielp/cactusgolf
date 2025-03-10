@@ -139,9 +139,9 @@ function DrillManager() {
     setEditingDrill({
       ...drill,
       achievements: {
-        beginner: drill.achievements?.beginner || '',
-        intermediate: drill.achievements?.intermediate || '',
-        advanced: drill.achievements?.advanced || ''
+        level1: drill.achievements?.level1 || drill.achievements?.beginner || '',
+        level2: drill.achievements?.level2 || drill.achievements?.intermediate || '',
+        level3: drill.achievements?.level3 || drill.achievements?.advanced || ''
       }
     });
   };
@@ -221,9 +221,9 @@ function DrillManager() {
       duration: 10,
       category: categories[0] || '',
       achievements: {
-        beginner: '',
-        intermediate: '',
-        advanced: ''
+        level1: '',
+        level2: '',
+        level3: ''
       }
     });
   };
@@ -466,13 +466,13 @@ function DrillManager() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium mb-1">Beginner Achievement</label>
+                <label className="block text-sm font-medium mb-1">Level 1 Achievement</label>
                 <input
                   type="text"
-                  value={editingDrill.achievements.beginner}
+                  value={editingDrill.achievements.level1}
                   onChange={(e) => setEditingDrill({
                     ...editingDrill, 
-                    achievements: {...editingDrill.achievements, beginner: e.target.value}
+                    achievements: {...editingDrill.achievements, level1: e.target.value}
                   })}
                   className="w-full p-2 border rounded"
                   required
@@ -480,13 +480,13 @@ function DrillManager() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium mb-1">Intermediate Achievement</label>
+                <label className="block text-sm font-medium mb-1">Level 2 Achievement</label>
                 <input
                   type="text"
-                  value={editingDrill.achievements.intermediate}
+                  value={editingDrill.achievements.level2}
                   onChange={(e) => setEditingDrill({
                     ...editingDrill, 
-                    achievements: {...editingDrill.achievements, intermediate: e.target.value}
+                    achievements: {...editingDrill.achievements, level2: e.target.value}
                   })}
                   className="w-full p-2 border rounded"
                   required
@@ -494,13 +494,13 @@ function DrillManager() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium mb-1">Advanced Achievement</label>
+                <label className="block text-sm font-medium mb-1">Level 3 Achievement</label>
                 <input
                   type="text"
-                  value={editingDrill.achievements.advanced}
+                  value={editingDrill.achievements.level3}
                   onChange={(e) => setEditingDrill({
                     ...editingDrill, 
-                    achievements: {...editingDrill.achievements, advanced: e.target.value}
+                    achievements: {...editingDrill.achievements, level3: e.target.value}
                   })}
                   className="w-full p-2 border rounded"
                   required

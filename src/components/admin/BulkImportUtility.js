@@ -49,9 +49,9 @@ function BulkImportUtility() {
     const nameIdx = headers.findIndex(h => h.toLowerCase() === 'name');
     const descriptionIdx = headers.findIndex(h => h.toLowerCase() === 'description');
     const durationIdx = headers.findIndex(h => h.toLowerCase() === 'duration');
-    const beginnerIdx = headers.findIndex(h => h.toLowerCase().includes('beginner'));
-    const intermediateIdx = headers.findIndex(h => h.toLowerCase().includes('intermediate'));
-    const advancedIdx = headers.findIndex(h => h.toLowerCase().includes('advanced'));
+    const level1Idx = headers.findIndex(h => h.toLowerCase().includes('level 1') || h.toLowerCase().includes('level1'));
+    const level2Idx = headers.findIndex(h => h.toLowerCase().includes('level 2') || h.toLowerCase().includes('level2'));
+    const level3Idx = headers.findIndex(h => h.toLowerCase().includes('level 3') || h.toLowerCase().includes('level3'));
     const idIdx = headers.findIndex(h => h.toLowerCase() === 'id');
     
     // Validate required fields
@@ -112,9 +112,9 @@ function BulkImportUtility() {
         description,
         duration,
         achievements: {
-          beginner: beginnerIdx !== -1 ? fields[beginnerIdx] : `Complete the ${name} drill`,
-          intermediate: intermediateIdx !== -1 ? fields[intermediateIdx] : `Improve performance in the ${name} drill`,
-          advanced: advancedIdx !== -1 ? fields[advancedIdx] : `Master the ${name} drill`
+          level1: level1Idx !== -1 ? fields[level1Idx] : `Complete the ${name} drill`,
+          level2: level2Idx !== -1 ? fields[level2Idx] : `Improve performance in the ${name} drill`,
+          level3: level3Idx !== -1 ? fields[level3Idx] : `Master the ${name} drill`
         }
       };
       
@@ -237,9 +237,9 @@ function BulkImportUtility() {
           "description": "Place 8 balls in a circle around the hole at 3-foot distance.",
           "duration": 10,
           "achievements": {
-            "beginner": "Make 3 out of 8 putts",
-            "intermediate": "Make 5 out of 8 putts",
-            "advanced": "Make 7 out of 8 putts"
+            "level1": "Make 3 out of 8 putts",
+            "level2": "Make 5 out of 8 putts",
+            "level3": "Make 7 out of 8 putts"
           }
         }
       ],
@@ -250,9 +250,9 @@ function BulkImportUtility() {
           "description": "Try to hit 10 drives into a simulated fairway target.",
           "duration": 15,
           "achievements": {
-            "beginner": "Hit 3 out of 10 into the fairway",
-            "intermediate": "Hit 5 out of 10 into the fairway",
-            "advanced": "Hit 7 out of 10 into the fairway"
+            "level1": "Hit 3 out of 10 into the fairway",
+            "level2": "Hit 5 out of 10 into the fairway",
+            "level3": "Hit 7 out of 10 into the fairway"
           }
         }
       ]
@@ -261,7 +261,7 @@ function BulkImportUtility() {
   };
 
   const getExampleCSV = () => {
-    return `Category,ID,Name,Description,Duration,Beginner Achievement,Intermediate Achievement,Advanced Achievement
+    return `Category,ID,Name,Description,Duration,Level 1 Achievement,Level 2 Achievement,Level 3 Achievement
 putting,putting-example-1,Circle Putting Challenge,"Place 8 balls in a circle around the hole at 3-foot distance.",10,Make 3 out of 8 putts,Make 5 out of 8 putts,Make 7 out of 8 putts
 driving,driving-example-1,Fairway Finder,"Try to hit 10 drives into a simulated fairway target.",15,"Hit 3 out of 10 into the fairway","Hit 5 out of 10 into the fairway","Hit 7 out of 10 into the fairway"`;
   };
