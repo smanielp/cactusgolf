@@ -36,98 +36,169 @@ function BulkImportUtility() {
     reader.readAsText(file);
   };
 
-  // Parse CSV data into the JSON structure our app expects
-  const parseCSV = (csvData) => {
-    // Split CSV into lines
-    const lines = csvData.split('\n').filter(line => line.trim());
+// Parse CSV data into the JSON structure our app expects
+const parseCSV = (csvData) => {
+  // Replace any Windows line endings with Unix line endings
+  csvData = csvData.replace(/\r\n/g, '\n');
+  
+  // More robust parsing for CSV with quoted fields
+  const parseCSVLine = (line) => {
+    const fields = [];
+    let currentField = '';
+    let inQuotes = false;
     
-    // Extract headers from the first line
-    const headers = lines[0].split(',').map(header => header.trim());
-    
-    // Find indices of required fields
-    const categoryIdx = headers.findIndex(h => h.toLowerCase() === 'category');
-    const nameIdx = headers.findIndex(h => h.toLowerCase() === 'name');
-    const descriptionIdx = headers.findIndex(h => h.toLowerCase() === 'description');
-    const durationIdx = headers.findIndex(h => h.toLowerCase() === 'duration');
-    const level1Idx = headers.findIndex(h => h.toLowerCase().includes('level 1') || h.toLowerCase().includes('level1'));
-    const level2Idx = headers.findIndex(h => h.toLowerCase().includes('level 2') || h.toLowerCase().includes('level2'));
-    const level3Idx = headers.findIndex(h => h.toLowerCase().includes('level 3') || h.toLowerCase().includes('level3'));
-    const idIdx = headers.findIndex(h => h.toLowerCase() === 'id');
-    
-    // Validate required fields
-    if (categoryIdx === -1 || nameIdx === -1 || descriptionIdx === -1 || durationIdx === -1) {
-      throw new Error('CSV is missing required columns: category, name, description, duration');
-    }
-    
-    // Group drills by category
-    const drillsByCategory = {};
-    
-    // Process each data row
-    for (let i = 1; i < lines.length; i++) {
-      // Skip empty lines
-      if (!lines[i].trim()) continue;
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
       
-      // Split line into fields, handling potential commas in quoted fields
-      let fields = [];
-      let currentField = '';
-      let inQuotes = false;
-      
-      for (let char of lines[i]) {
-        if (char === '"') {
-          inQuotes = !inQuotes;
-        } else if (char === ',' && !inQuotes) {
-          fields.push(currentField);
-          currentField = '';
+      if (char === '"') {
+        // Check for escaped quotes ("")
+        if (i + 1 < line.length && line[i + 1] === '"') {
+          currentField += '"';
+          i++; // Skip the next quote
         } else {
-          currentField += char;
+          inQuotes = !inQuotes;
         }
+      } else if (char === ',' && !inQuotes) {
+        fields.push(currentField);
+        currentField = '';
+      } else {
+        currentField += char;
       }
-      // Add the last field
-      fields.push(currentField);
-      
-      // Trim each field and remove quotes
-      fields = fields.map(field => field.trim().replace(/^"|"$/g, ''));
-      
-      // Extract field values
-      const category = fields[categoryIdx].toLowerCase().trim();
-      const name = fields[nameIdx];
-      const description = fields[descriptionIdx];
-      const duration = parseInt(fields[durationIdx]) || 10; // Default to 10 if parsing fails
-      
-      // Skip if required fields are missing
-      if (!category || !name || !description) {
-        console.warn(`Skipping row ${i + 1}: Missing required fields`);
-        continue;
-      }
-      
-      // Create a unique ID if not provided
-      const id = idIdx !== -1 && fields[idIdx] 
-        ? fields[idIdx] 
-        : `${category}-${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
-      
-      // Create the drill object
-      const drill = {
-        id,
-        name,
-        description,
-        duration,
-        achievements: {
-          level1: level1Idx !== -1 ? fields[level1Idx] : `Complete the ${name} drill`,
-          level2: level2Idx !== -1 ? fields[level2Idx] : `Improve performance in the ${name} drill`,
-          level3: level3Idx !== -1 ? fields[level3Idx] : `Master the ${name} drill`
-        }
-      };
-      
-      // Add to the appropriate category array
-      if (!drillsByCategory[category]) {
-        drillsByCategory[category] = [];
-      }
-      
-      drillsByCategory[category].push(drill);
     }
     
-    return drillsByCategory;
+    // Add the last field
+    fields.push(currentField);
+    
+    // Trim each field and remove quotes
+    return fields.map(field => field.trim().replace(/^"|"$/g, ''));
   };
+  
+  // Handle multi-line fields by pre-processing the CSV
+  let processedCSV = '';
+  let inQuotes = false;
+  
+  for (let i = 0; i < csvData.length; i++) {
+    const char = csvData[i];
+    
+    if (char === '"') {
+      inQuotes = !inQuotes;
+    }
+    
+    // Replace newlines within quotes with a placeholder
+    if (char === '\n' && inQuotes) {
+      processedCSV += ' ';
+    } else {
+      processedCSV += char;
+    }
+  }
+  
+  // Split processed CSV into lines
+  const lines = processedCSV.split('\n').filter(line => line.trim());
+  
+  // Extract headers from the first line
+  const headers = parseCSVLine(lines[0]);
+  
+  // Find indices of required fields
+  const categoryIdx = headers.findIndex(h => h.toLowerCase() === 'category');
+  const nameIdx = headers.findIndex(h => h.toLowerCase() === 'name');
+  const descriptionIdx = headers.findIndex(h => h.toLowerCase() === 'description');
+  const durationIdx = headers.findIndex(h => h.toLowerCase() === 'duration');
+  const level1Idx = headers.findIndex(h => 
+    h.toLowerCase().includes('level 1') || 
+    h.toLowerCase().includes('level1')
+  );
+  const level2Idx = headers.findIndex(h => 
+    h.toLowerCase().includes('level 2') || 
+    h.toLowerCase().includes('level2')
+  );
+  const level3Idx = headers.findIndex(h => 
+    h.toLowerCase().includes('level 3') || 
+    h.toLowerCase().includes('level3')
+  );
+  const idIdx = headers.findIndex(h => h.toLowerCase() === 'id');
+  
+  console.log('Header indices:', { 
+    categoryIdx, nameIdx, descriptionIdx, durationIdx, 
+    level1Idx, level2Idx, level3Idx, idIdx 
+  });
+  
+  // Validate required fields
+  if (categoryIdx === -1 || nameIdx === -1 || descriptionIdx === -1 || durationIdx === -1) {
+    throw new Error('CSV is missing required columns: category, name, description, duration');
+  }
+  
+  // Validate achievement fields
+  if (level1Idx === -1 || level2Idx === -1 || level3Idx === -1) {
+    console.warn('One or more achievement level columns not found. Using default achievements.');
+  }
+  
+  // Group drills by category
+  const drillsByCategory = {};
+  
+  // Process each data row
+  for (let i = 1; i < lines.length; i++) {
+    // Skip empty lines
+    if (!lines[i].trim()) continue;
+    
+    // Parse the line into fields
+    const fields = parseCSVLine(lines[i]);
+    
+    // Extract field values
+    const category = fields[categoryIdx]?.toLowerCase().trim() || '';
+    const name = fields[nameIdx] || '';
+    const description = fields[descriptionIdx] || '';
+    const duration = parseInt(fields[durationIdx]) || 10; // Default to 10 if parsing fails
+    
+    // Skip if required fields are missing
+    if (!category || !name || !description) {
+      console.warn(`Skipping row ${i + 1}: Missing required fields`);
+      continue;
+    }
+    
+    // Create a unique ID if not provided
+    const id = (idIdx !== -1 && fields[idIdx]) 
+      ? fields[idIdx] 
+      : `${category}-${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+    
+    // Ensure achievement values exist or use defaults
+    const level1 = (level1Idx !== -1 && fields[level1Idx]) 
+      ? fields[level1Idx] 
+      : `Complete the ${name} drill`;
+      
+    const level2 = (level2Idx !== -1 && fields[level2Idx]) 
+      ? fields[level2Idx] 
+      : `Improve performance in the ${name} drill`;
+      
+    const level3 = (level3Idx !== -1 && fields[level3Idx]) 
+      ? fields[level3Idx] 
+      : `Master the ${name} drill`;
+    
+    // Create the drill object
+    const drill = {
+      id,
+      name,
+      description,
+      duration,
+      achievements: {
+        level1,
+        level2,
+        level3
+      }
+    };
+    
+    // Log for debugging
+    console.log(`Processing row ${i}:`, { category, name, achievements: drill.achievements });
+    
+    // Add to the appropriate category array
+    if (!drillsByCategory[category]) {
+      drillsByCategory[category] = [];
+    }
+    
+    drillsByCategory[category].push(drill);
+  }
+  
+  return drillsByCategory;
+};
 
   const importDrills = async () => {
     if (!importData) {
