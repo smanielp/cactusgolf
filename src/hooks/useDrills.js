@@ -6,10 +6,9 @@ import {
   query, 
   orderBy, 
   addDoc,
-  writeBatch,
   doc 
 } from 'firebase/firestore';
-import drillsJSON from '../drills.json'; // Import the original JSON for migration
+import drillsJSON from '../drills.json'; // Import the original JSON as fallback
 
 export function useDrills() {
   const [drills, setDrills] = useState({});
@@ -66,61 +65,6 @@ export function useDrills() {
     }
   }, []);
 
-  // Function to migrate drills from JSON to Firestore (admin only)
-  const migrateDrillsToFirestore = async () => {
-    try {
-      const batch = writeBatch(db);
-      let batchCount = 0;
-      const MAX_BATCH_SIZE = 500; // Firestore limit is 500 writes per batch
-      
-      // Track batches to commit
-      const batches = [];
-      let currentBatch = batch;
-      
-      // For each category in the drills JSON
-      for (const [category, drillsList] of Object.entries(drillsJSON)) {
-        for (const drill of drillsList) {
-          // Create a new document reference
-          const drillRef = doc(collection(db, 'drills'));
-          
-          // Add to current batch
-          currentBatch.set(drillRef, {
-            ...drill,
-            category,
-            createdAt: new Date()
-          });
-          
-          batchCount++;
-          
-          // If we hit the batch limit, prepare to commit and start a new batch
-          if (batchCount >= MAX_BATCH_SIZE) {
-            batches.push(currentBatch);
-            currentBatch = writeBatch(db);
-            batchCount = 0;
-          }
-        }
-      }
-      
-      // Add the last batch if it has operations
-      if (batchCount > 0) {
-        batches.push(currentBatch);
-      }
-      
-      // Commit all batches
-      for (const batch of batches) {
-        await batch.commit();
-      }
-      
-      // Refresh the drills list
-      await fetchDrills();
-      
-      return true;
-    } catch (err) {
-      console.error('Error migrating drills:', err);
-      return false;
-    }
-  };
-
   // Function to add a single new drill
   const addDrill = async (drillData) => {
     try {
@@ -156,7 +100,6 @@ export function useDrills() {
     drills, 
     loading, 
     error, 
-    migrateDrillsToFirestore,
     addDrill,
     refreshDrills
   };
