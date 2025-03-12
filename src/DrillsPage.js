@@ -14,6 +14,19 @@ function DrillsPage() {
   // Use the hook to fetch drill data from Firestore
   const { drills: drillsData, loading: drillsLoading } = useDrills();
   
+  // Get all available categories from the drill data
+  const categories = Object.keys(drillsData).map(key => ({
+    id: key,
+    label: key.charAt(0).toUpperCase() + key.slice(1).replace('-', ' ')
+  }));
+  
+  // Debug output
+  useEffect(() => {
+    console.log('DrillsPage - drillsData:', drillsData);
+    console.log('DrillsPage - Object keys:', Object.keys(drillsData));
+    console.log('DrillsPage - Categories rendered:', categories);
+  }, [drillsData, categories]);
+  
   // Load achievements from localStorage on initial load
   useEffect(() => {
     const savedAchievements = localStorage.getItem('drillAchievements');
@@ -29,22 +42,20 @@ function DrillsPage() {
 
   // Update drills when category or drillsData changes
   useEffect(() => {
+    console.log('DrillsPage - Updating drill list. Selected category:', selectedCategory);
     if (selectedCategory && drillsData[selectedCategory]) {
+      console.log('DrillsPage - Setting drills for category:', selectedCategory, 'count:', drillsData[selectedCategory].length);
       setDrills(drillsData[selectedCategory] || []);
     } else if (!selectedCategory) {
       // When no category is selected, show all drills
       const allDrills = Object.values(drillsData).flat();
+      console.log('DrillsPage - Setting all drills, count:', allDrills.length);
       setDrills(allDrills);
+    } else {
+      console.log('DrillsPage - No drills for category:', selectedCategory);
+      setDrills([]);
     }
   }, [selectedCategory, drillsData]); // Added drillsData as a dependency
-
-  // Get all available categories from the drill data
-  const categories = Object.keys(drillsData).map(key => ({
-    id: key,
-    label: key.charAt(0).toUpperCase() + key.slice(1).replace('-', ' ')
-  }));
-
-  // Update achievement level for a drill
   const updateAchievement = (drillId, level) => {
     setAchievements(prev => ({
       ...prev,
@@ -54,7 +65,13 @@ function DrillsPage() {
 
   // Add drill to practice session
   const addToSession = (drill) => {
-    setSessionDrills(prev => [...prev, drill]);
+    // Add selectedLevel to the drill object
+    const drillWithLevel = {
+      ...drill,
+      selectedLevel: achievements[drill.id] || 'level3' // Use selected level or default to level3
+    };
+    
+    setSessionDrills(prev => [...prev, drillWithLevel]);
     setShowConfirmation(true);
     
     // Hide confirmation after 2 seconds
@@ -106,7 +123,7 @@ function DrillsPage() {
     sessionData.drills.forEach(drill => {
       const result = drill.result;
       if (result && result.requirement) {
-        const currentLevel = achievements[drill.id] || 'level1';
+        const currentLevel = achievements[drill.id] || 'level3';
         const levelIndex = ['level1', 'level2', 'level3'].indexOf(currentLevel);
         
         // If user achieved the goal for their current level, move them up to the next level
@@ -261,7 +278,7 @@ function DrillsPage() {
                       key={level}
                       onClick={() => updateAchievement(drill.id, level)}
                       className={`text-xs py-1 px-2 rounded border ${
-                        achievements[drill.id] === level
+                        (achievements[drill.id] || 'level3') === level
                           ? 'bg-green-600 text-white border-green-600'
                           : 'bg-white text-gray-700 border-gray-300'
                       }`}
@@ -272,7 +289,7 @@ function DrillsPage() {
                 </div>
                 <div className="mt-2 text-xs text-gray-600">
                   {drill.achievements ? 
-                    (drill.achievements[achievements[drill.id] || 'level1'] || 'No description for this level') : 
+                    (drill.achievements[achievements[drill.id] || 'level3'] || 'No description for this level') : 
                     'Achievement data missing'}
                 </div>
               </div>

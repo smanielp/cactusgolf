@@ -23,7 +23,9 @@ export function useDrills() {
     try {
       const drillsRef = collection(db, 'drills');
       const q = query(drillsRef, orderBy('category'), orderBy('name'));
+      console.log('useDrills - Running query for drills collection');
       const querySnapshot = await getDocs(q);
+      console.log('useDrills - Query returned:', querySnapshot.size, 'documents');
       
       // Group by category
       const drillsByCategory = {};
@@ -31,6 +33,7 @@ export function useDrills() {
       querySnapshot.forEach((doc) => {
         const drillData = doc.data();
         const category = drillData.category;
+        console.log('useDrills - Processing drill:', doc.id, 'category:', category);
         
         if (!drillsByCategory[category]) {
           drillsByCategory[category] = [];
@@ -43,9 +46,12 @@ export function useDrills() {
       });
       
       // If no drills in Firestore, use the local JSON
+      console.log('useDrills - Categories found:', Object.keys(drillsByCategory));
       if (Object.keys(drillsByCategory).length === 0) {
+        console.log('useDrills - No drills in Firestore, using local JSON');
         setDrills(drillsJSON);
       } else {
+        console.log('useDrills - Using Firestore drills');
         setDrills(drillsByCategory);
       }
       
@@ -136,11 +142,13 @@ export function useDrills() {
 
   // Function to refresh drills
   const refreshDrills = () => {
+    console.log('useDrills - refreshDrills called');
     setLastRefresh(Date.now());
   };
 
   // Fetch drills initially and when refresh is triggered
   useEffect(() => {
+    console.log('useDrills - useEffect triggered, calling fetchDrills');
     fetchDrills();
   }, [fetchDrills, lastRefresh]);
 

@@ -158,6 +158,7 @@ function DrillManager() {
     try {
       if (editingDrill.id) {
         // Update existing drill
+        console.log('DrillManager - Updating drill:', editingDrill.id, editingDrill);
         const drillRef = doc(db, 'drills', editingDrill.id);
         await updateDoc(drillRef, {
           name: editingDrill.name,
@@ -178,6 +179,7 @@ function DrillManager() {
         setSuccess('Drill updated successfully');
       } else {
         // Create new drill
+        console.log('DrillManager - Creating new drill:', editingDrill);
         const newDrill = {
           name: editingDrill.name,
           description: editingDrill.description,
@@ -188,6 +190,7 @@ function DrillManager() {
         };
         
         const docRef = await addDoc(collection(db, 'drills'), newDrill);
+        console.log('DrillManager - New drill created with ID:', docRef.id);
         
         // Add to state
         setDrillsList(prev => [...prev, { id: docRef.id, ...newDrill }]);

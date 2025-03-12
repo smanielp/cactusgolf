@@ -11,8 +11,8 @@ function PracticeSessionExecutor({ sessionDrills, onComplete, onCancel }) {
   const getAchievementRequirement = () => {
     if (!currentDrill || !currentDrill.achievements) return null;
     
-    // Default to level1 (formerly beginner)
-    const level = 'level1';
+    // Use the selectedLevel from the drill if available, otherwise default to level3
+    const level = currentDrill.selectedLevel || 'level3';
     const achievementText = currentDrill.achievements[level];
     
     // Try to extract the number of repetitions from the achievement text
