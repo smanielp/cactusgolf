@@ -230,7 +230,10 @@ function DrillsPage() {
             <p className="mt-2 text-gray-500">Loading drills...</p>
           </div>
         ) : (
-          drills.map(drill => (
+          drills.map(drill => {
+            // Debugging info
+            console.log('Drill structure:', drill);
+            return (
             <div key={drill.id} className="bg-white p-4 rounded-lg shadow-md">
               <div className="flex justify-between items-start mb-2">
                 <h2 className="text-lg font-semibold">{drill.name}</h2>
@@ -268,11 +271,14 @@ function DrillsPage() {
                   ))}
                 </div>
                 <div className="mt-2 text-xs text-gray-600">
-                  {drill.achievements[achievements[drill.id] || 'level1']}
+                  {drill.achievements ? 
+                    (drill.achievements[achievements[drill.id] || 'level1'] || 'No description for this level') : 
+                    'Achievement data missing'}
                 </div>
               </div>
             </div>
-          ))
+          );
+          })
         )}
         
         {!drillsLoading && drills.length === 0 && (
