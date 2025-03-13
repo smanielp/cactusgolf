@@ -44,7 +44,7 @@ const drillsDatabase = {
     { id: 29, name: "Eyes Closed Drill", description: "Hit bunker shots with your eyes closed to develop feel", duration: 10, difficulty: "level3" },
     { id: 30, name: "Splash Contest", description: "Focus on creating consistent splash with the sand", duration: 10, difficulty: "level1" },
   ],
-  "full-round": [
+  "on-the-course": [
     { id: 31, name: "9-Hole Play", description: "Play 9 holes focusing on course management", duration: 90, difficulty: "level2" },
     { id: 32, name: "18-Hole Play", description: "Complete a full 18-hole round", duration: 240, difficulty: "level2" },
     { id: 33, name: "Par 3 Course", description: "Play a par 3 course to work on short game", duration: 60, difficulty: "level1" },

@@ -194,7 +194,7 @@ function App() {
                 <option value="chipping">Chipping</option>
                 <option value="putting">Putting</option>
                 <option value="bunker">Bunker Shots</option>
-                <option value="full-round">Full Round</option>
+                <option value="on-the-course">On the Course</option>
               </select>
             </div>
             
